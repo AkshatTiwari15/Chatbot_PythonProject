@@ -1,64 +1,56 @@
-def chatbot():
-    print("Hi! I'm ChatBot. Type 'exit' to end the conversation.")
-    while True:
-        user_input = input("You: ").strip().lower()
-        if user_input == 'exit':
-            print("ChatBot: Goodbye! Have a nice day!")
-            break
-        elif any(greet in user_input for greet in ['hello', 'hi', 'hey']):
-            print("ChatBot: Hello! How can I assist you today?")
-        elif 'how are you' in user_input:
-            print("ChatBot: I'm just a program, but I'm functioning well. How about you?")
-        elif 'your name' in user_input:
-            print("ChatBot: I'm ChatBot, your virtual assistant.")
-        elif 'help' in user_input:
-            print("ChatBot: I can chat with you, tell jokes, do simple math, and answer a few questions.")
-        elif 'weather' in user_input:
-            print("ChatBot: I can't check real-time weather, but I hope it's nice where you are!")
-        elif 'joke' in user_input:
-            print("ChatBot: Why did the scarecrow win an award? Because he was outstanding in his field!")
-        elif 'add' in user_input or 'sum' in user_input or '+' in user_input:
-            import re
-            numbers = re.findall(r'\d+', user_input)
-            if len(numbers) >= 2:
-                total = sum(map(int, numbers))
-                print(f"ChatBot: The sum is {total}.")
-            else:
-                print("ChatBot: Please provide two or more numbers to add.")
-        elif 'subtract' in user_input or 'minus' in user_input or '-' in user_input:
-            import re
-            numbers = re.findall(r'-?\d+', user_input)
-            if len(numbers) >= 2:
-                result = int(numbers[0]) - int(numbers[1])
-                print(f"ChatBot: The result of subtraction is {result}.")
-            else:
-                print("ChatBot: Please provide two numbers to subtract.")
-        elif 'multiply' in user_input or 'times' in user_input or '*' in user_input:
-            import re
-            numbers = re.findall(r'\d+', user_input)
-            if len(numbers) >= 2:
-                product = 1
-                for num in numbers:
-                    product *= int(num)
-                print(f"ChatBot: The product is {product}.")
-            else:
-                print("ChatBot: Please provide two or more numbers to multiply.")
-        elif 'divide' in user_input or '/' in user_input:
-            import re
-            numbers = re.findall(r'\d+', user_input)
-            if len(numbers) >= 2:
-                try:
-                    result = int(numbers[0]) / int(numbers[1])
-                    print(f"ChatBot: The division result is {result}.")
-                except ZeroDivisionError:
-                    print("ChatBot: Cannot divide by zero.")
-            else:
-                print("ChatBot: Please provide two numbers to divide.")
-        elif any(farewell in user_input for farewell in ['bye', 'goodbye', 'see you']):
-            print("ChatBot: Goodbye! Looking forward to chatting again.")
-            break
-        else:
-            print("ChatBot: Sorry, I don't understand that. Can you ask something else?")
+from flask import Flask, render_template, request, jsonify
+import random
+import re
 
-if __name__ == '__main__':
-    chatbot()
+app = Flask(__name__)
+def get_bot_response(user_input):
+    user_input = user_input.lower().strip()
+
+    greetings = ["hi", "hello", "hey", "good morning", "good evening"]
+    if any(greet in user_input for greet in greetings):
+        return "Hello! How can I help you today?"
+
+    if "your name" in user_input:
+        return "I'm your friendly chatbot. You can call me ChatBuddy."
+
+    if "help" in user_input:
+        return "Sure, I'm here to help! Ask me anything."
+
+    if "weather" in user_input:
+        return "I can't fetch real-time weather, but it's always sunny in here!"
+
+    if "joke" in user_input:
+        jokes = [
+            "Why did the computer get cold? Because it forgot to close its Windows!",
+            "Why don't robots have brothers? Because they all share the same motherboard!",
+            "I told my computer I needed a break, and it said 'No problem — I'll go to sleep.'"
+        ]
+        return random.choice(jokes)
+
+    if re.search(r"\bbye\b|\bexit\b|\bquit\b", user_input):
+        return "Goodbye! Have a great day."
+
+    default_responses = [
+        "That's interesting! Tell me more.",
+        "I'm not sure I understand. Can you elaborate?",
+        "Why do you say that?",
+        "How does that make you feel?",
+        "I see. Go on...",
+        "Can you explain that further?",
+        "What do you think about that?",
+        "Interesting perspective. Let's dive deeper."
+    ]
+    return random.choice(default_responses)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_input = request.json.get("message")
+    bot_response = get_bot_response(user_input)
+    return jsonify({"response": bot_response})
+
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=5000)
